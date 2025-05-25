@@ -1,0 +1,204 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --background: 222 47% 11%;
+  --foreground: 0 0% 100%;
+  --card: 224 71% 4%;
+  --card-foreground: 213 31% 91%;
+  --popover: 224 71% 4%;
+  --popover-foreground: 215 20.2% 65.1%;
+  --primary: 262.1 83.3% 57.8%;
+  --primary-foreground: 210 20% 98%;
+  --secondary: 220 14.3% 95.9%;
+  --secondary-foreground: 220.9 39.3% 11%;
+  --muted: 220 14.3% 95.9%;
+  --muted-foreground: 220 8.9% 46.1%;
+  --accent: 220 14.3% 95.9%;
+  --accent-foreground: 220.9 39.3% 11%;
+  --destructive: 0 84.2% 60.2%;
+  --destructive-foreground: 210 20% 98%;
+  --border: 220 13% 91%;
+  --input: 220 13% 91%;
+  --ring: 262.1 83.3% 57.8%;
+  --radius: 0.5rem;
+}
+
+.dark {
+  --background: 222 47% 11%;
+  --foreground: 213 31% 91%;
+  --card: 224 71% 4%;
+  --card-foreground: 213 31% 91%;
+  --popover: 224 71% 4%;
+  --popover-foreground: 215 20.2% 65.1%;
+  --primary: 263.4 70% 50.4%;
+  --primary-foreground: 210 20% 98%;
+  --secondary: 215 27.9% 16.9%;
+  --secondary-foreground: 210 20% 98%;
+  --muted: 215 27.9% 16.9%;
+  --muted-foreground: 217.9 10.6% 64.9%;
+  --accent: 215 27.9% 16.9%;
+  --accent-foreground: 210 20% 98%;
+  --destructive: 0 62.8% 30.6%;
+  --destructive-foreground: 210 20% 98%;
+  --border: 215 27.9% 16.9%;
+  --input: 215 27.9% 16.9%;
+  --ring: 263.4 70% 50.4%;
+}
+
+@layer base {
+  body {
+    background-color: #0f1117;
+    color: white;
+  }
+  
+  /* Optimize animations for better performance */
+  * {
+    will-change: auto;
+  }
+  
+  /* Force hardware acceleration for specific elements */
+  .group:hover {
+    transform: translateZ(0);
+  }
+  
+  /* Optimize for better animation performance */
+  [data-radix-popper-content-wrapper] {
+    z-index: 50;
+    transform: translateZ(0);
+  }
+  
+  /* Reduce layout shifts during animations */
+  .group {
+    contain: layout style paint;
+  }
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+@keyframes pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+.animate-pulse {
+  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+@keyframes pulse-slow {
+  0%,
+  100% {
+    opacity: 0.2;
+  }
+  50% {
+    opacity: 0.1;
+  }
+}
+
+.animate-pulse-slow {
+  animation: pulse-slow 3s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+/* Firefly animation */
+.firefly {
+  position: absolute;
+  width: 3px;
+  height: 3px;
+  border-radius: 50%;
+  background-color: rgba(255, 255, 255, 0.8);
+  box-shadow: 0 0 10px 2px rgba(255, 255, 255, 0.5), 0 0 20px 4px rgba(255, 255, 255, 0.3);
+  animation: firefly 6s ease-in-out infinite;
+}
+
+.firefly:nth-child(1) {
+  top: 20%;
+  left: 10%;
+  animation-delay: 0s;
+}
+
+.firefly:nth-child(2) {
+  top: 50%;
+  left: 30%;
+  animation-delay: 1s;
+}
+
+.firefly:nth-child(3) {
+  top: 30%;
+  left: 50%;
+  animation-delay: 2s;
+}
+
+.firefly:nth-child(4) {
+  top: 70%;
+  left: 70%;
+  animation-delay: 3s;
+}
+
+.firefly:nth-child(5) {
+  top: 10%;
+  left: 90%;
+  animation-delay: 4s;
+}
+
+.firefly:nth-child(6) {
+  top: 80%;
+  left: 20%;
+  animation-delay: 5s;
+}
+
+.firefly:nth-child(7) {
+  top: 40%;
+  left: 80%;
+  animation-delay: 6s;
+}
+
+@keyframes firefly {
+  0% {
+    opacity: 0;
+    transform: translateX(0) translateY(0) scale(0.5);
+  }
+  25% {
+    opacity: 1;
+    transform: translateX(20px) translateY(-20px) scale(1);
+  }
+  50% {
+    opacity: 0.8;
+    transform: translateX(40px) translateY(10px) scale(0.8);
+  }
+  75% {
+    opacity: 1;
+    transform: translateX(20px) translateY(30px) scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: translateX(0) translateY(0) scale(0.5);
+  }
+}
+
+/* Hide scrollbar for the details panel but allow scrolling */
+#details-container::-webkit-scrollbar {
+  width: 0;
+  height: 0;
+}
+
+#details-container {
+  scrollbar-width: none;
+}
+
+/* Prevent body scroll when details are open */
+body.details-open {
+  overflow: hidden;
+}
