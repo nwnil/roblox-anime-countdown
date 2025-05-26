@@ -1,6 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
+import { createPortal } from "react-dom"
 import Image from "next/image"
 import { Bell, BellRing, Share2, ChevronLeft, Settings } from "lucide-react"
 import { Button } from "@/components/ui/button"
@@ -39,6 +40,11 @@ export default function GameDetails({
   const [copied, setCopied] = useState(false)
   const [scrollY, setScrollY] = useState(0)
   const [showNotificationModal, setShowNotificationModal] = useState(false)
+  const [mounted, setMounted] = useState(false)
+
+  useEffect(() => {
+    setMounted(true)
+  }, [])
 
   // Update scroll position for parallax effects
   useEffect(() => {
@@ -118,10 +124,13 @@ export default function GameDetails({
   const initialY = cardPosition.top
   const initialScale = cardPosition.width / (window.innerWidth * 0.75) // Target width is 75% of screen
 
-  return (
+  if (!mounted) return null
+
+  return createPortal(
     <AnimatePresence>
       <motion.div
-        className="fixed inset-0 z-50 flex items-start justify-end"
+        key="game-details-overlay"
+        className="fixed inset-0 z-[9999] flex items-start justify-end"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
@@ -139,7 +148,7 @@ export default function GameDetails({
         {/* Details panel */}
         <motion.div
           id="details-container"
-          className="relative h-full w-full md:w-3/4 lg:w-2/3 xl:w-1/2 bg-gradient-to-b from-[#1a1d29] to-[#151823] shadow-2xl overflow-y-auto overflow-x-hidden"
+          className="relative h-full w-full md:w-3/4 lg:w-2/3 xl:w-1/2 bg-gradient-to-b from-[#1a1d29] to-[#151823] shadow-2xl overflow-y-auto overflow-x-hidden z-[9999]"
           initial={{
             x: initialX,
             y: initialY - window.scrollY, // Adjust for page scroll
@@ -357,13 +366,17 @@ export default function GameDetails({
         </motion.div>
       </motion.div>
 
-      <NotificationModal
-        isOpen={showNotificationModal}
-        onClose={() => setShowNotificationModal(false)}
-        game={game}
-        isNotificationEnabled={isNotificationEnabled}
-        onNotificationToggle={onNotificationToggle}
-      />
-    </AnimatePresence>
+      {showNotificationModal && (
+        <NotificationModal
+          key="notification-modal"
+          isOpen={showNotificationModal}
+          onClose={() => setShowNotificationModal(false)}
+          game={game}
+          isNotificationEnabled={isNotificationEnabled}
+          onNotificationToggle={onNotificationToggle}
+        />
+      )}
+    </AnimatePresence>,
+    document.body
   )
 }
