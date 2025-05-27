@@ -182,13 +182,13 @@ export default function GameDetails({
           onClick={(e) => e.stopPropagation()}
         >
           {/* Header image with parallax effect */}
-          <div className="relative h-[40vh] overflow-hidden">
+          <div className="relative h-[40vh] overflow-hidden bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900">
             <motion.div style={{ y: scrollY * 0.5 }} className="absolute inset-0 z-0">
               <Image
                 src={game.thumbnail || "/placeholder.svg"}
                 alt={game.title}
                 fill
-                className="object-cover"
+                className="object-contain"
                 priority
               />
               <div className="absolute inset-0 bg-gradient-to-t from-[#1a1d29] via-[#1a1d29]/80 to-transparent"></div>

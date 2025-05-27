@@ -140,175 +140,213 @@ export default function GameCard({ game, isNotificationEnabled, onNotificationTo
     <>
       <motion.div
         ref={cardRef}
-        className="group relative bg-gradient-to-b from-[#1a1d29] to-[#1a1d29]/90 rounded-xl overflow-hidden border border-gray-800/50"
+        className="group relative bg-gradient-to-br from-[#0f1117] via-[#1a1d29] to-[#151823] rounded-2xl overflow-hidden border border-gray-800/30 shadow-2xl"
         onHoverStart={() => setIsHovered(true)}
         onHoverEnd={() => setIsHovered(false)}
         whileHover={{ 
-          y: -5,
-          borderColor: "rgba(147, 51, 234, 0.5)",
+          y: -8,
+          scale: 1.02,
+          filter: "brightness(1.05) saturate(1.15) contrast(1.02)"
         }}
         transition={{
           type: "spring",
-          stiffness: 400,
-          damping: 25,
-          mass: 1
+          stiffness: 300,
+          damping: 20,
+          mass: 0.8
         }}
         layout
       >
-        <div className="relative h-48 overflow-hidden">
-          <motion.div
-            whileHover={{ scale: 1.1 }}
-            transition={{
-              type: "spring",
-              stiffness: 300,
-              damping: 30
-            }}
-            className="w-full h-full"
-          >
-            <Image
-              src={game.thumbnail || "/placeholder.svg"}
-              alt={game.title}
-              width={400}
-              height={225}
-              className="w-full h-full object-cover"
-            />
-          </motion.div>
-          <div className="absolute inset-0 bg-gradient-to-t from-[#1a1d29] to-transparent"></div>
 
-          <div className="absolute top-2 right-2 z-20">
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <motion.div
-                    whileHover={{ scale: 1.1 }}
-                    whileTap={{ scale: 0.95 }}
-                    transition={{
-                      type: "spring",
-                      stiffness: 400,
-                      damping: 30
-                    }}
-                  >
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className={`rounded-full bg-black/30 backdrop-blur-sm hover:bg-black/50 transition-colors ${
-                        isNotificationEnabled ? "text-yellow-400" : "text-white"
-                      }`}
-                      onClick={(e) => {
-                        e.stopPropagation()
-                        handleNotificationClick()
-                      }}
-                    >
-                      {isNotificationEnabled ? (
-                        <BellRing className="h-4 w-4 fill-yellow-400" />
-                      ) : (
-                        <Bell className="h-4 w-4" />
-                      )}
-                    </Button>
-                  </motion.div>
-                </TooltipTrigger>
-                <TooltipContent>
-                  <div className="text-center">
-                    {isNotificationEnabled ? (
-                      <div>
-                        <p>Notifications enabled! 🔔</p>
-                        <p className="text-xs opacity-80">Click to disable or configure</p>
-                      </div>
-                    ) : copied ? (
-                      <p>Setting up notifications... 🎉</p>
-                    ) : (
-                      <div>
-                        <p>Set up email or Discord notifications</p>
-                        <p className="text-xs opacity-80">Never miss a release!</p>
-                      </div>
-                    )}
+
+        {/* Main content layout */}
+        <div className="flex h-full">
+          {/* Left side - Image and extras */}
+          <div className="relative w-32 flex-shrink-0 flex flex-col">
+            {/* Image container */}
+            <div className="relative h-32 w-32 rounded-xl overflow-hidden mb-2">
+              <motion.div
+                whileHover={{ scale: 1.05 }}
+                transition={{
+                  type: "spring",
+                  stiffness: 300,
+                  damping: 20
+                }}
+                className="relative h-full w-full"
+              >
+                <div className="relative h-full w-full bg-gradient-to-br from-gray-800 to-gray-900">
+                  <Image
+                    src={game.thumbnail || "/placeholder.svg"}
+                    alt={game.title}
+                    fill
+                    className="object-cover"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent" />
+                  
+                  {/* Floating badges on image */}
+                  <div className="absolute top-1 left-1 right-1 flex flex-wrap gap-1">
+                    <Badge className={`bg-gradient-to-r ${getGenreColor(game.genre)} border-none text-[10px] px-1 py-0`}>
+                      {game.genre}
+                    </Badge>
                   </div>
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
+                  
+                  {/* Hype indicator */}
+                  <div className="absolute bottom-1 right-1">
+                    <div className={`w-3 h-3 rounded-full ${getAnticipationColor(game.anticipationLevel)} shadow-lg`} />
+                  </div>
+                </div>
+              </motion.div>
+            </div>
+
+
           </div>
 
-          <div className="absolute bottom-2 left-3 flex flex-wrap gap-1">
-            <Badge className={`bg-gradient-to-r ${getGenreColor(game.genre)} border-none`}>{game.genre}</Badge>
-            <Badge className={`bg-gradient-to-r ${getAnimeStyleColor(game.animeStyle)} border-none`}>
-              {game.animeStyle}
-            </Badge>
+          {/* Right side - Content */}
+          <div className="flex-1 p-4 flex flex-col justify-between">
+            {/* Header */}
+            <div>
+              <div className="flex items-start justify-between mb-2">
+                <div className="flex-1 min-w-0">
+                  <motion.h3 
+                    className="font-bold text-lg leading-tight line-clamp-2 text-white"
+                    whileHover={{
+                      background: "linear-gradient(45deg, #c084fc, #60a5fa, #34d399)",
+                      backgroundClip: "text",
+                      color: "transparent",
+                      backgroundSize: "200% 200%"
+                    }}
+                    transition={{
+                      duration: 0.3,
+                      ease: "easeInOut"
+                    }}
+                  >
+                    {game.title}
+                  </motion.h3>
+                  <p className="text-gray-400 text-xs mt-1">by {game.developer}</p>
+                </div>
+                
+                {/* Notification button */}
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <motion.div
+                        whileHover={{ scale: 1.2, rotate: 15 }}
+                        whileTap={{ scale: 0.9 }}
+                        transition={{
+                          type: "spring",
+                          stiffness: 400,
+                          damping: 20
+                        }}
+                        className="relative z-20"
+                      >
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className={`h-8 w-8 rounded-full bg-black/20 backdrop-blur-sm hover:bg-black/40 transition-all ${
+                            isNotificationEnabled ? "text-yellow-400 bg-yellow-400/20" : "text-gray-300"
+                          }`}
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            handleNotificationClick()
+                          }}
+                        >
+                          {isNotificationEnabled ? (
+                            <BellRing className="h-3 w-3 fill-current" />
+                          ) : (
+                            <Bell className="h-3 w-3" />
+                          )}
+                        </Button>
+                      </motion.div>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <div className="text-center">
+                        {isNotificationEnabled ? (
+                          <div>
+                            <p>Notifications enabled! 🔔</p>
+                            <p className="text-xs opacity-80">Click to configure</p>
+                          </div>
+                        ) : copied ? (
+                          <p>Setting up... 🎉</p>
+                        ) : (
+                          <div>
+                            <p>Get notified on release!</p>
+                            <p className="text-xs opacity-80">Never miss a launch</p>
+                          </div>
+                        )}
+                      </div>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              </div>
+
+              {/* Anime style badge */}
+              <Badge className={`bg-gradient-to-r ${getAnimeStyleColor(game.animeStyle)} border-none text-xs mb-3`}>
+                {game.animeStyle} Style
+              </Badge>
+            </div>
+
+            {/* Countdown */}
+            <div className="relative">
+              <div className="grid grid-cols-4 gap-1">
+                <div className="flex flex-col items-center">
+                  <span className="text-lg font-bold text-transparent bg-clip-text bg-gradient-to-b from-white to-gray-300">
+                    {timeLeft.days}
+                  </span>
+                  <span className="text-[10px] text-gray-500 uppercase tracking-wider">Days</span>
+                </div>
+                <div className="flex flex-col items-center">
+                  <span className="text-lg font-bold text-transparent bg-clip-text bg-gradient-to-b from-white to-gray-300">
+                    {timeLeft.hours}
+                  </span>
+                  <span className="text-[10px] text-gray-500 uppercase tracking-wider">Hrs</span>
+                </div>
+                <div className="flex flex-col items-center">
+                  <span className="text-lg font-bold text-transparent bg-clip-text bg-gradient-to-b from-white to-gray-300">
+                    {timeLeft.minutes}
+                  </span>
+                  <span className="text-[10px] text-gray-500 uppercase tracking-wider">Min</span>
+                </div>
+                <div className="flex flex-col items-center">
+                  <span className="text-lg font-bold text-transparent bg-clip-text bg-gradient-to-b from-white to-gray-300">
+                    {timeLeft.seconds}
+                  </span>
+                  <span className="text-[10px] text-gray-500 uppercase tracking-wider">Sec</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Footer */}
+            <div className="flex items-center justify-between mt-3 pt-2 border-t border-gray-800/50">
+              <div className="text-[10px] text-gray-500">
+                {new Date(game.releaseDate).toLocaleDateString()}
+              </div>
+              <div className="flex items-center gap-1">
+                <span className="text-[10px] text-gray-400">{game.anticipationLevel}%</span>
+                <div className="text-[10px] text-gray-500">hype</div>
+              </div>
+            </div>
           </div>
         </div>
 
-        <div className="p-4">
-          <motion.h3 
-            className="font-bold text-lg mb-1 line-clamp-1"
-            whileHover={{
-              background: "linear-gradient(to right, #c084fc, #60a5fa)",
-              backgroundClip: "text",
-              color: "transparent"
+
+
+
+
+        {/* Notification indicator - subtle corner glow */}
+        {isNotificationEnabled && (
+          <motion.div 
+            className="absolute top-2 right-2 w-3 h-3 bg-yellow-400 rounded-full shadow-lg z-30"
+            animate={{
+              scale: [1, 1.2, 1],
+              opacity: [0.8, 1, 0.8]
             }}
             transition={{
-              duration: 0.2,
+              duration: 2,
+              repeat: Infinity,
               ease: "easeInOut"
             }}
           >
-            {game.title}
-          </motion.h3>
-          <p className="text-gray-400 text-sm mb-3">by {game.developer}</p>
-
-          <div className="grid grid-cols-4 gap-2 mb-4 relative">
-            <motion.div 
-              className="absolute inset-0 bg-gradient-to-r from-purple-500/5 to-blue-500/5 rounded-lg -m-1"
-              initial={{ opacity: 0 }}
-              whileHover={{ opacity: 1 }}
-              transition={{
-                duration: 0.2,
-                ease: "easeInOut"
-              }}
-            />
-
-            <div className="flex flex-col items-center relative z-10">
-              <span className="text-xl font-bold text-white">{timeLeft.days}</span>
-              <span className="text-xs text-gray-400">DAYS</span>
-            </div>
-            <div className="flex flex-col items-center relative z-10">
-              <span className="text-xl font-bold text-white">{timeLeft.hours}</span>
-              <span className="text-xs text-gray-400">HOURS</span>
-            </div>
-            <div className="flex flex-col items-center relative z-10">
-              <span className="text-xl font-bold text-white">{timeLeft.minutes}</span>
-              <span className="text-xs text-gray-400">MINS</span>
-            </div>
-            <div className="flex flex-col items-center relative z-10">
-              <span className="text-xl font-bold text-white">{timeLeft.seconds}</span>
-              <span className="text-xs text-gray-400">SECS</span>
-            </div>
-          </div>
-
-          <div className="flex items-center justify-between">
-            <div className="text-xs text-gray-400">Release: {new Date(game.releaseDate).toLocaleDateString()}</div>
-            <div className="flex items-center gap-1">
-              <div className={`w-2 h-2 rounded-full ${getAnticipationColor(game.anticipationLevel)}`}></div>
-              <span className="text-xs text-gray-400">{game.anticipationLevel}% Hype</span>
-            </div>
-          </div>
-        </div>
-
-        {/* Glow effect on hover */}
-        <motion.div
-          className="absolute -inset-0.5 bg-gradient-to-r from-purple-600 to-blue-600 rounded-xl blur z-0"
-          initial={{ opacity: 0 }}
-          animate={{ 
-            opacity: isHovered ? 0.2 : 0,
-          }}
-          transition={{
-            duration: 0.3,
-            ease: "easeInOut"
-          }}
-        />
-
-        {/* Notification indicator */}
-        {isNotificationEnabled && (
-          <div className="absolute top-0 left-0 w-0 h-0 border-t-[40px] border-l-[40px] border-t-yellow-500 border-l-transparent border-r-transparent rotate-180 z-20">
-            <BellRing className="absolute -top-[30px] -right-[15px] h-3 w-3 fill-white text-white rotate-[135deg]" />
-          </div>
+            <div className="absolute inset-0 bg-yellow-400 rounded-full animate-ping opacity-75" />
+          </motion.div>
         )}
 
         {/* Clickable overlay for opening details */}

@@ -153,6 +153,12 @@ export default function Navbar({ onSearch, onCategoryChange, activeCategory }: N
             </div>
           </form>
 
+          <Link href="/admin" className="hidden md:block">
+            <Button variant="outline" size="sm" className="border-purple-500/30 text-purple-400 hover:bg-purple-500/10 hover:text-purple-300">
+              Admin
+            </Button>
+          </Link>
+
           <Sheet open={isOpen} onOpenChange={setIsOpen}>
             <SheetTrigger asChild>
               <Button variant="ghost" size="icon" className="md:hidden relative overflow-hidden group">
@@ -205,6 +211,14 @@ export default function Navbar({ onSearch, onCategoryChange, activeCategory }: N
                       </Button>
                     ))}
                   </div>
+                </div>
+
+                <div className="mt-6 pt-4 border-t border-gray-800">
+                  <Link href="/admin" onClick={() => setIsOpen(false)}>
+                    <Button variant="outline" className="w-full border-purple-500/30 text-purple-400 hover:bg-purple-500/10 hover:text-purple-300">
+                      Admin Dashboard
+                    </Button>
+                  </Link>
                 </div>
               </div>
             </SheetContent>

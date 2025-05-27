@@ -169,10 +169,21 @@ export default function Home() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-[#0f1117] to-[#131620] text-white">
-      <div className="absolute top-0 left-0 right-0 h-[500px] overflow-hidden z-0 opacity-30">
+    <div className="min-h-screen bg-gradient-to-b from-[#0f1117] to-[#131620] text-white relative">
+      {/* Main background image - far back */}
+      <div className="fixed inset-0 z-0">
+        <div 
+          className="w-full h-full bg-cover bg-center bg-no-repeat opacity-5"
+          style={{
+            backgroundImage: 'url(/background-image.png)'
+          }}
+        ></div>
+        <div className="absolute inset-0 bg-gradient-to-b from-[#0f1117]/80 via-[#131620]/60 to-[#0f1117]/90"></div>
+      </div>
+      
+      {/* Secondary background overlay */}
+      <div className="absolute top-0 left-0 right-0 h-[500px] overflow-hidden z-0 opacity-20">
         <div className="absolute inset-0 bg-gradient-to-b from-purple-900/20 via-blue-900/10 to-transparent"></div>
-        <div className="w-full h-full bg-[url('/grid-pattern.png')] bg-repeat opacity-10"></div>
       </div>
 
       <Navbar onSearch={handleSearch} onCategoryChange={handleCategoryChange} activeCategory={activeCategory} />
@@ -184,11 +195,13 @@ export default function Home() {
           transition={{ duration: 0.5 }}
           className="relative h-[300px] w-full mb-12 rounded-xl overflow-hidden shadow-2xl"
         >
-          <div className="absolute inset-0 bg-gradient-to-r from-purple-900/80 to-blue-900/80 z-10"></div>
+          <div className="absolute inset-0 bg-slate-900/70 z-10"></div>
+          <div className="absolute inset-0 bg-gradient-to-r from-cyan-400/30 via-blue-500/40 to-emerald-400/30 z-10"></div>
+          <div className="absolute inset-0 bg-cyan-500/10 animate-pulse z-10"></div>
           <div 
             className="absolute inset-0 bg-cover bg-center bg-no-repeat" 
             style={{
-              backgroundImage: 'url(https://i.ibb.co/gMgxN8D9/200-1.png)'
+              backgroundImage: 'url(https://i.ibb.co/PzZCQs7z/200.png)'
             }}
           ></div>
 
@@ -211,7 +224,7 @@ export default function Home() {
               className="text-4xl md:text-5xl font-bold mb-4"
             >
               Anime Roblox Games
-              <span className="block text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-purple-400 to-pink-500">
+              <span className="block text-cyan-100">
                 Countdown & Release Dates
               </span>
             </motion.h1>
@@ -285,19 +298,19 @@ export default function Home() {
                   </span>
                 </div>
               </div>
-              <div className="flex items-center gap-2">
-                <span className="text-sm text-gray-400">Sort by:</span>
-                <select
-                  className="bg-[#1a1d29] border border-gray-700 rounded-lg py-1 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500 transition-all"
-                  value={sortOption}
-                  onChange={(e) => handleSortChange(e.target.value)}
-                >
-                  <option>Release Date</option>
-                  <option>Most Anticipated</option>
-                  <option>Title (A-Z)</option>
-                  <option>Notifications On</option>
-                </select>
-              </div>
+                              <div className="flex items-center gap-2">
+                  <span className="text-sm text-gray-400">Sort by:</span>
+                  <select
+                    className="bg-gray-800 border border-gray-700 rounded-md py-2 px-3 text-sm text-white font-medium shadow-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none cursor-pointer appearance-none pr-8 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTAiIGhlaWdodD0iNiIgdmlld0JveD0iMCAwIDEwIDYiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PHBhdGggZD0iTTEgMUw1IDVMOSAxIiBzdHJva2U9IiNGRkZGRkYiIHN0cm9rZS13aWR0aD0iMS41IiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiLz48L3N2Zz4=')] bg-no-repeat bg-[center_right_0.75rem]"
+                    value={sortOption}
+                    onChange={(e) => handleSortChange(e.target.value)}
+                  >
+                    <option className="bg-gray-800 text-white py-1">Release Date</option>
+                    <option className="bg-gray-800 text-white py-1">Most Anticipated</option>
+                    <option className="bg-gray-800 text-white py-1">Title (A-Z)</option>
+                    <option className="bg-gray-800 text-white py-1">Notifications On</option>
+                  </select>
+                </div>
             </div>
 
             {isLoading ? (
