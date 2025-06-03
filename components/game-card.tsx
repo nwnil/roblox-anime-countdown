@@ -2,55 +2,96 @@
 
 import { useState, useEffect, useRef } from "react"
 import Image from "next/image"
-import { Bell, BellRing, Settings } from "lucide-react"
+import { Settings, Bell, BellOff } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 import GameDetails from "@/components/game-details"
-import NotificationModal from "@/components/notification-modal"
+import DiscordModal from "@/components/discord-modal"
 import type { Game } from "@/lib/types"
 import { motion } from "framer-motion"
+import { calculateTimeRemaining, formatDateInUserTimezone } from "@/lib/timezone-utils"
 
 interface GameCardProps {
   game: Game
-  isNotificationEnabled: boolean
-  onNotificationToggle: () => void
 }
 
-export default function GameCard({ game, isNotificationEnabled, onNotificationToggle }: GameCardProps) {
+export default function GameCard({ game }: GameCardProps) {
   const [timeLeft, setTimeLeft] = useState({
     days: 0,
     hours: 0,
     minutes: 0,
     seconds: 0,
   })
+  const [isClient, setIsClient] = useState(false)
+  const [isGameReleased, setIsGameReleased] = useState(false)
 
   const [showDetails, setShowDetails] = useState(false)
-  const [showNotificationModal, setShowNotificationModal] = useState(false)
   const [isHovered, setIsHovered] = useState(false)
   const [copied, setCopied] = useState(false)
+  const [showDiscordModal, setShowDiscordModal] = useState(false)
+  const [isNotificationEnabled, setIsNotificationEnabled] = useState(false)
   const cardRef = useRef<HTMLDivElement>(null)
   const [cardPosition, setCardPosition] = useState({ top: 0, left: 0, width: 0, height: 0 })
 
+  // Set client flag after mount to prevent hydration issues
   useEffect(() => {
-    const calculateTimeLeft = () => {
-      const difference = new Date(game.releaseDate).getTime() - new Date().getTime()
+    setIsClient(true)
+    
+    // Check if notifications are enabled for this game
+    if (typeof window !== 'undefined') {
+      const stored = localStorage.getItem(`notifications-${game.id}`)
+      if (stored) {
+        try {
+          const preferences = JSON.parse(stored)
+          setIsNotificationEnabled(preferences.email?.enabled && preferences.email?.verified)
+        } catch (e) {
+          console.error('Error parsing notification preferences:', e)
+        }
+      }
+    }
+  }, [game.id])
 
-      if (difference > 0) {
-        setTimeLeft({
-          days: Math.floor(difference / (1000 * 60 * 60 * 24)),
-          hours: Math.floor((difference / (1000 * 60 * 60)) % 24),
-          minutes: Math.floor((difference / 1000 / 60) % 60),
-          seconds: Math.floor((difference / 1000) % 60),
-        })
+  useEffect(() => {
+    if (!isClient) return // Don't run countdown on server
+
+    const updateCountdown = () => {
+      const timeRemaining = calculateTimeRemaining(game.releaseDate)
+      const newTimeLeft = {
+        days: timeRemaining.days,
+        hours: timeRemaining.hours,
+        minutes: timeRemaining.minutes,
+        seconds: timeRemaining.seconds,
+      }
+      
+      // Check if the countdown has reached zero (game is released)
+      const hasReachedZero = timeRemaining.isExpired
+      
+      // Check if this is the moment when the countdown just reached zero
+      const wasStillCountingDown = timeLeft.days > 0 || timeLeft.hours > 0 || timeLeft.minutes > 0 || timeLeft.seconds > 0
+      
+      // If countdown just reached zero and we were still counting down before
+      if (hasReachedZero && wasStillCountingDown) {
+        // Dispatch game released event
+        if (typeof window !== 'undefined') {
+          window.dispatchEvent(new CustomEvent('gameReleased', { detail: game }))
+        }
+        setIsGameReleased(true)
+      }
+      
+      // Only update timeLeft if game hasn't been released yet
+      if (!hasReachedZero) {
+        setTimeLeft(newTimeLeft)
+      } else {
+        // Game is released, mark it as such
+        setIsGameReleased(true)
       }
     }
 
-    calculateTimeLeft()
-    const timer = setInterval(calculateTimeLeft, 1000)
+    updateCountdown()
+    const timer = setInterval(updateCountdown, 1000)
 
     return () => clearInterval(timer)
-  }, [game.releaseDate])
+  }, [game.releaseDate, isClient, timeLeft.days, timeLeft.hours, timeLeft.minutes, timeLeft.seconds, game])
 
   // Get color based on anticipation level
   const getAnticipationColor = (level: number) => {
@@ -61,56 +102,88 @@ export default function GameCard({ game, isNotificationEnabled, onNotificationTo
     return "bg-gray-500"
   }
 
-  // Get genre badge color
-  const getGenreColor = (genre: string) => {
-    switch (genre) {
-      case "Adventure":
-        return "from-blue-600 to-blue-400"
-      case "Action":
-        return "from-red-600 to-red-400"
-      case "RPG":
-        return "from-purple-600 to-purple-400"
-      case "Fighting":
-        return "from-orange-600 to-orange-400"
-      case "Simulator":
-        return "from-green-600 to-green-400"
+  // Get new category based on game content
+  const getGameCategory = (game: Game) => {
+    // Map based on genre and game content - handle full genre names from admin panel
+    if (game.genre === "Fighting / PvP" || game.genre === "Fighting" || game.title.toLowerCase().includes("demon hunter") || game.title.toLowerCase().includes("dragon warrior")) {
+      return "Fighting & PvP"
+    }
+    if (game.genre === "RPG / Open World" || game.genre === "RPG" || game.genre === "Open World" || game.title.toLowerCase().includes("soul society") || game.title.toLowerCase().includes("alchemist")) {
+      return "RPG & Open World"
+    }
+    if (game.genre === "Adventure / Quest-Based" || game.genre === "Adventure" || game.title.toLowerCase().includes("pirate legacy") || game.title.toLowerCase().includes("hero academia") || game.title.toLowerCase().includes("shinobi")) {
+      return "RPG & Open World"
+    }
+    if (game.genre === "Simulator / Idle" || game.genre === "Simulator" || game.title.toLowerCase().includes("mecha pilot")) {
+      return "Simulator & Idle"
+    }
+    if (game.genre === "Tower Defense" || game.title.toLowerCase().includes("titan defense")) {
+      return "Tower Defense"
+    }
+    if (game.genre === "Sports / Racing" || game.genre === "Racing" || game.genre === "Sports" || game.title.toLowerCase().includes("racing") || game.title.toLowerCase().includes("sports")) {
+      return "Sports & Racing"
+    }
+    if (game.genre === "Arena Battler") {
+      return "Arena Battler"
+    }
+    if (game.genre === "Story Mode") {
+      return "Story Mode"
+    }
+    // Default fallback
+    return "RPG & Open World"
+  }
+
+  // Get category color
+  const getCategoryColor = (category: string) => {
+    switch (category) {
+      case "Tower Defense":
+        return "bg-blue-900/30 text-blue-300 border-blue-700/50"
+      case "Fighting & PvP":
+        return "bg-red-900/30 text-red-300 border-red-700/50"
+      case "RPG & Open World":
+        return "bg-purple-900/30 text-purple-300 border-purple-700/50"
+      case "Simulator & Idle":
+        return "bg-green-900/30 text-green-300 border-green-700/50"
+      case "Sports & Racing":
+        return "bg-orange-900/30 text-orange-300 border-orange-700/50"
       default:
-        return "from-gray-600 to-gray-400"
+        return "bg-gray-900/30 text-gray-300 border-gray-700/50"
     }
   }
 
-  // Get anime style badge color
+  // Get anime style color
   const getAnimeStyleColor = (style: string) => {
     switch (style) {
       case "One Piece":
-        return "from-blue-600 to-cyan-400"
+        return "bg-cyan-900/30 text-cyan-300 border-cyan-700/50"
       case "Naruto":
-        return "from-orange-600 to-yellow-400"
+        return "bg-orange-900/30 text-orange-300 border-orange-700/50"
       case "Dragon Ball":
-        return "from-yellow-600 to-orange-400"
+        return "bg-yellow-900/30 text-yellow-300 border-yellow-700/50"
       case "My Hero Academia":
-        return "from-green-600 to-blue-400"
+        return "bg-emerald-900/30 text-emerald-300 border-emerald-700/50"
       case "Demon Slayer":
-        return "from-red-600 to-pink-400"
+        return "bg-pink-900/30 text-pink-300 border-pink-700/50"
       case "Bleach":
-        return "from-purple-600 to-indigo-400"
+        return "bg-indigo-900/30 text-indigo-300 border-indigo-700/50"
       case "Attack on Titan":
-        return "from-red-700 to-red-500"
+        return "bg-rose-900/30 text-rose-300 border-rose-700/50"
+      case "Fullmetal Alchemist":
+        return "bg-amber-900/30 text-amber-300 border-amber-700/50"
+      case "Evangelion":
+        return "bg-violet-900/30 text-violet-300 border-violet-700/50"
+      case "JoJo's Bizarre Adventure":
+        return "bg-purple-900/30 text-purple-300 border-purple-700/50"
+      case "One Punch Man":
+        return "bg-red-900/30 text-red-300 border-red-700/50"
+      case "Blue Lock":
+        return "bg-blue-900/30 text-blue-300 border-blue-700/50"
+      case "Black Clover":
+        return "bg-green-900/30 text-green-300 border-green-700/50"
+      case "Fire Force":
+        return "bg-orange-900/30 text-orange-300 border-orange-700/50"
       default:
-        return "from-gray-600 to-gray-400"
-    }
-  }
-
-  // Handle notification setup
-  const handleNotificationClick = () => {
-    if (isNotificationEnabled) {
-      // If already enabled, show quick toggle feedback
-      onNotificationToggle()
-      setCopied(true)
-      setTimeout(() => setCopied(false), 2000)
-    } else {
-      // If not enabled, open setup modal
-      setShowNotificationModal(true)
+        return "bg-gray-900/30 text-gray-300 border-gray-700/50"
     }
   }
 
@@ -136,245 +209,200 @@ export default function GameCard({ game, isNotificationEnabled, onNotificationTo
     setShowDetails(false)
   }
 
+  // Handle notification toggle
+  const handleNotificationToggle = () => {
+    // Check updated status from localStorage
+    if (typeof window !== 'undefined') {
+      const stored = localStorage.getItem(`notifications-${game.id}`)
+      if (stored) {
+        try {
+          const preferences = JSON.parse(stored)
+          setIsNotificationEnabled(preferences.email?.enabled && preferences.email?.verified)
+        } catch (e) {
+          console.error('Error parsing notification preferences:', e)
+        }
+      }
+    }
+  }
+
+  // Handle notification button click
+  const handleNotificationClick = (e: React.MouseEvent) => {
+    e.stopPropagation() // Prevent opening game details
+    setShowDiscordModal(true)
+  }
+
+  // Don't render the card if the game has been released (for exact dates only)
+  if (game.hasExactDate !== false && isGameReleased) {
+    return null
+  }
+
   return (
     <>
       <motion.div
         ref={cardRef}
-        className="group relative bg-gradient-to-br from-[#0f1117] via-[#1a1d29] to-[#151823] rounded-2xl overflow-hidden border border-gray-800/30 shadow-2xl"
+        className="group relative bg-white/[0.02] backdrop-blur-sm border border-white/10 rounded-2xl overflow-hidden shadow-xl"
         onHoverStart={() => setIsHovered(true)}
         onHoverEnd={() => setIsHovered(false)}
         whileHover={{ 
-          y: -8,
-          scale: 1.02,
-          filter: "brightness(1.05) saturate(1.15) contrast(1.02)"
+          y: -2,
+          boxShadow: "0 20px 40px rgba(0, 0, 0, 0.15)"
         }}
         transition={{
-          type: "spring",
-          stiffness: 300,
-          damping: 20,
-          mass: 0.8
+          duration: 0.2,
+          ease: "easeOut"
         }}
-        layout
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        style={{
+          willChange: 'transform',
+          backfaceVisibility: 'hidden'
+        }}
       >
+        {/* Subtle top accent */}
+        <div 
+          className="absolute top-0 left-0 right-0 h-0.5 transition-all duration-500 ease-out bg-gradient-to-r from-transparent via-white/30 to-transparent"
+        />
 
+        {/* Notification Bell - Top Right */}
+        <div className="absolute top-4 right-4 z-20">
+          <Button
+            size="sm"
+            variant="ghost"
+            onClick={handleNotificationClick}
+            className="h-8 w-8 p-0 rounded-full backdrop-blur-sm transition-all duration-200 hover:scale-110 border bg-blue-500/20 border-blue-400/30 text-blue-400 hover:bg-blue-500/30 hover:text-blue-300"
+            title="Join our Discord for updates"
+          >
+            <Bell className="h-4 w-4" />
+          </Button>
+        </div>
 
         {/* Main content layout */}
-        <div className="flex h-full">
-          {/* Left side - Image and extras */}
-          <div className="relative w-32 flex-shrink-0 flex flex-col">
-            {/* Image container */}
-            <div className="relative h-32 w-32 rounded-xl overflow-hidden mb-2">
-              <motion.div
-                whileHover={{ scale: 1.05 }}
-                transition={{
-                  type: "spring",
-                  stiffness: 300,
-                  damping: 20
-                }}
-                className="relative h-full w-full"
-              >
-                <div className="relative h-full w-full bg-gradient-to-br from-gray-800 to-gray-900">
-                  <Image
-                    src={game.thumbnail || "/placeholder.svg"}
-                    alt={game.title}
-                    fill
-                    className="object-cover"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent" />
-                  
-                  {/* Floating badges on image */}
-                  <div className="absolute top-1 left-1 right-1 flex flex-wrap gap-1">
-                    <Badge className={`bg-gradient-to-r ${getGenreColor(game.genre)} border-none text-[10px] px-1 py-0`}>
-                      {game.genre}
-                    </Badge>
-                  </div>
-                  
-                  {/* Hype indicator */}
-                  <div className="absolute bottom-1 right-1">
-                    <div className={`w-3 h-3 rounded-full ${getAnticipationColor(game.anticipationLevel)} shadow-lg`} />
-                  </div>
-                </div>
-              </motion.div>
+        <div className="flex h-full p-6">
+          {/* Left side - Image */}
+          <div className="relative w-20 h-20 flex-shrink-0 mr-5">
+            <div 
+              className="relative h-full w-full rounded-xl overflow-hidden bg-gray-800/50 transition-transform duration-200 ease-out hover:scale-[1.02]"
+              style={{
+                willChange: 'transform',
+                backfaceVisibility: 'hidden'
+              }}
+            >
+              <Image
+                src={game.icon || game.thumbnail || "/placeholder.svg"}
+                alt={game.title}
+                fill
+                className="object-cover"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent" />
             </div>
-
-
           </div>
 
           {/* Right side - Content */}
-          <div className="flex-1 p-4 flex flex-col justify-between">
+          <div className="flex-1 flex flex-col justify-between min-w-0">
             {/* Header */}
-            <div>
+            <div className="mb-4">
               <div className="flex items-start justify-between mb-2">
-                <div className="flex-1 min-w-0">
-                  <motion.h3 
-                    className="font-bold text-lg leading-tight line-clamp-2 text-white"
-                    whileHover={{
-                      background: "linear-gradient(45deg, #c084fc, #60a5fa, #34d399)",
-                      backgroundClip: "text",
-                      color: "transparent",
-                      backgroundSize: "200% 200%"
-                    }}
-                    transition={{
-                      duration: 0.3,
-                      ease: "easeInOut"
-                    }}
-                  >
-                    {game.title}
-                  </motion.h3>
-                  <p className="text-gray-400 text-xs mt-1">by {game.developer}</p>
+                <div className="flex-1 min-w-0 pr-8">
+                  <div className="mb-1">
+                    <h3 className="font-semibold text-lg text-white leading-tight transition-transform duration-150 ease-out hover:translate-x-0.5">
+                      {game.title}
+                    </h3>
+                  </div>
+                  <p className="text-sm text-gray-400">by {game.developer}</p>
                 </div>
-                
-                {/* Notification button */}
-                <TooltipProvider>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <motion.div
-                        whileHover={{ scale: 1.2, rotate: 15 }}
-                        whileTap={{ scale: 0.9 }}
-                        transition={{
-                          type: "spring",
-                          stiffness: 400,
-                          damping: 20
-                        }}
-                        className="relative z-20"
+              </div>
+
+              {/* Tags */}
+              <div className="flex gap-2 mb-3 flex-wrap">
+                <span className={`px-3 py-1.5 text-xs font-medium rounded-lg border transition-all duration-150 ease-out hover:scale-[1.02] ${getCategoryColor(getGameCategory(game))}`}>
+                  {getGameCategory(game)}
+                </span>
+                <span className={`px-3 py-1.5 text-xs font-medium rounded-lg border transition-all duration-150 ease-out hover:scale-[1.02] ${getAnimeStyleColor(game.animeStyle)}`}>
+                  {game.animeStyle}
+                </span>
+              </div>
+            </div>
+
+            {/* Countdown / Release Info */}
+            {game.hasExactDate !== false ? (
+              // Show countdown for exact dates
+              <div className="bg-gray-900/30 rounded-xl p-4 mb-4 transition-colors duration-200 ease-out hover:bg-gray-900/40">
+                <div className="grid grid-cols-4 gap-3 text-center">
+                  {[
+                    { value: timeLeft.days, label: "Days" },
+                    { value: timeLeft.hours, label: "Hours" },
+                    { value: timeLeft.minutes, label: "Min" },
+                    { value: timeLeft.seconds, label: "Sec" }
+                  ].map((item) => (
+                    <div key={item.label} className="flex flex-col">
+                      <span 
+                        className="text-xl font-bold text-white font-mono transition-all duration-150 ease-out"
+                        key={item.value}
                       >
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className={`h-8 w-8 rounded-full bg-black/20 backdrop-blur-sm hover:bg-black/40 transition-all ${
-                            isNotificationEnabled ? "text-yellow-400 bg-yellow-400/20" : "text-gray-300"
-                          }`}
-                          onClick={(e) => {
-                            e.stopPropagation()
-                            handleNotificationClick()
-                          }}
-                        >
-                          {isNotificationEnabled ? (
-                            <BellRing className="h-3 w-3 fill-current" />
-                          ) : (
-                            <Bell className="h-3 w-3" />
-                          )}
-                        </Button>
-                      </motion.div>
-                    </TooltipTrigger>
-                    <TooltipContent>
-                      <div className="text-center">
-                        {isNotificationEnabled ? (
-                          <div>
-                            <p>Notifications enabled! 🔔</p>
-                            <p className="text-xs opacity-80">Click to configure</p>
-                          </div>
-                        ) : copied ? (
-                          <p>Setting up... 🎉</p>
-                        ) : (
-                          <div>
-                            <p>Get notified on release!</p>
-                            <p className="text-xs opacity-80">Never miss a launch</p>
-                          </div>
-                        )}
-                      </div>
-                    </TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
-              </div>
-
-              {/* Anime style badge */}
-              <Badge className={`bg-gradient-to-r ${getAnimeStyleColor(game.animeStyle)} border-none text-xs mb-3`}>
-                {game.animeStyle} Style
-              </Badge>
-            </div>
-
-            {/* Countdown */}
-            <div className="relative">
-              <div className="grid grid-cols-4 gap-1">
-                <div className="flex flex-col items-center">
-                  <span className="text-lg font-bold text-transparent bg-clip-text bg-gradient-to-b from-white to-gray-300">
-                    {timeLeft.days}
-                  </span>
-                  <span className="text-[10px] text-gray-500 uppercase tracking-wider">Days</span>
-                </div>
-                <div className="flex flex-col items-center">
-                  <span className="text-lg font-bold text-transparent bg-clip-text bg-gradient-to-b from-white to-gray-300">
-                    {timeLeft.hours}
-                  </span>
-                  <span className="text-[10px] text-gray-500 uppercase tracking-wider">Hrs</span>
-                </div>
-                <div className="flex flex-col items-center">
-                  <span className="text-lg font-bold text-transparent bg-clip-text bg-gradient-to-b from-white to-gray-300">
-                    {timeLeft.minutes}
-                  </span>
-                  <span className="text-[10px] text-gray-500 uppercase tracking-wider">Min</span>
-                </div>
-                <div className="flex flex-col items-center">
-                  <span className="text-lg font-bold text-transparent bg-clip-text bg-gradient-to-b from-white to-gray-300">
-                    {timeLeft.seconds}
-                  </span>
-                  <span className="text-[10px] text-gray-500 uppercase tracking-wider">Sec</span>
+                        {String(item.value).padStart(2, '0')}
+                      </span>
+                      <span className="text-xs text-gray-400 uppercase tracking-wide">
+                        {item.label}
+                      </span>
+                    </div>
+                  ))}
                 </div>
               </div>
-            </div>
+            ) : (
+              // Show approximate release text
+              <div className="bg-gradient-to-r from-purple-900/30 to-blue-900/30 rounded-xl p-4 mb-4 transition-colors duration-200 ease-out hover:from-purple-900/40 hover:to-blue-900/40 border border-purple-500/20">
+                <div className="text-center">
+                  <div className="text-sm text-gray-400 mb-1">Expected Release</div>
+                  <div className="text-lg font-semibold text-white">
+                    {game.approximateReleaseText || "TBA"}
+                  </div>
+                </div>
+              </div>
+            )}
 
             {/* Footer */}
-            <div className="flex items-center justify-between mt-3 pt-2 border-t border-gray-800/50">
-              <div className="text-[10px] text-gray-500">
-                {new Date(game.releaseDate).toLocaleDateString()}
+            <div className="flex items-center justify-between text-sm">
+              <div className="text-gray-400">
+                {game.hasExactDate !== false ? (
+                  formatDateInUserTimezone(game.releaseDate, { 
+                    month: 'short', 
+                    day: 'numeric' 
+                  })
+                ) : (
+                  game.approximateReleaseText || "TBA"
+                )}
               </div>
-              <div className="flex items-center gap-1">
-                <span className="text-[10px] text-gray-400">{game.anticipationLevel}%</span>
-                <div className="text-[10px] text-gray-500">hype</div>
+              <div className="text-gray-400">
+                {game.status}
               </div>
             </div>
           </div>
         </div>
 
-
-
-
-
-        {/* Notification indicator - subtle corner glow */}
-        {isNotificationEnabled && (
-          <motion.div 
-            className="absolute top-2 right-2 w-3 h-3 bg-yellow-400 rounded-full shadow-lg z-30"
-            animate={{
-              scale: [1, 1.2, 1],
-              opacity: [0.8, 1, 0.8]
-            }}
-            transition={{
-              duration: 2,
-              repeat: Infinity,
-              ease: "easeInOut"
-            }}
-          >
-            <div className="absolute inset-0 bg-yellow-400 rounded-full animate-ping opacity-75" />
-          </motion.div>
-        )}
-
-        {/* Clickable overlay for opening details */}
+        {/* Clickable overlay */}
         <div
           className="absolute inset-0 z-10 cursor-pointer"
           onClick={handleOpenDetails}
           aria-label={`View details for ${game.title}`}
-        ></div>
+        />
       </motion.div>
 
       {showDetails && (
         <GameDetails
           game={game}
-          isNotificationEnabled={isNotificationEnabled}
-          onNotificationToggle={onNotificationToggle}
           onClose={handleCloseDetails}
           cardPosition={cardPosition}
           timeLeft={timeLeft}
         />
       )}
 
-      <NotificationModal
-        isOpen={showNotificationModal}
-        onClose={() => setShowNotificationModal(false)}
-        game={game}
-        isNotificationEnabled={isNotificationEnabled}
-        onNotificationToggle={onNotificationToggle}
-      />
+      {showDiscordModal && (
+        <DiscordModal
+          isOpen={showDiscordModal}
+          onClose={() => setShowDiscordModal(false)}
+          game={game}
+        />
+      )}
     </>
   )
 }

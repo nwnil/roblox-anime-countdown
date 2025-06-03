@@ -3,6 +3,7 @@
 import { useState } from "react"
 import { Check, ChevronDown, X } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import { Badge } from "@/components/ui/badge"
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible"
 import { motion, AnimatePresence } from "framer-motion"
 
@@ -31,9 +32,9 @@ export default function FilterBar({ filters, onFilterChange }: FilterBarProps) {
 
   // Filter options
   const filterOptions = {
-    status: ["Upcoming", "Released", "Beta Testing"],
-    genre: ["Tower Defense", "Fighting & PvP", "RPG & Open World", "Simulator & Idle", "Sports & Racing"],
-    animeStyle: ["One Piece", "Naruto", "Dragon Ball", "My Hero Academia", "Demon Slayer", "Bleach", "Attack on Titan"],
+    status: ["Alpha Testing", "Beta Testing", "Upcoming", "TBA", "Delayed"],
+    genre: ["Fighting / PvP", "RPG / Open World", "Tower Defense", "Simulator / Idle", "Sports / Racing", "Arena Battler", "Story Mode", "Adventure / Quest-Based"],
+    animeStyle: ["One Piece", "Naruto", "Dragon Ball", "My Hero Academia", "Demon Slayer", "Bleach", "Attack on Titan", "Jujutsu Kaisen", "Chainsaw Man", "Solo Leveling", "Sword Art Online", "Tokyo Ghoul", "JoJo's Bizarre Adventure", "One Punch Man", "Blue Lock", "Black Clover", "Fire Force", "Other"],
   }
 
   // Check if a filter is active
@@ -66,7 +67,7 @@ export default function FilterBar({ filters, onFilterChange }: FilterBarProps) {
   return (
     <div className="bg-gradient-to-b from-[#1a1d29] to-[#1a1d29]/90 rounded-xl border border-gray-800/50 p-4 shadow-xl shadow-purple-900/5 backdrop-blur-sm">
       <div className="flex justify-between items-center mb-4">
-        <h3 className="font-bold text-lg bg-clip-text text-transparent bg-gradient-to-r from-white to-gray-400">
+        <h3 className="font-bold text-lg text-white">
           Filters
         </h3>
         {activeFilterCount > 0 && (
@@ -76,6 +77,86 @@ export default function FilterBar({ filters, onFilterChange }: FilterBarProps) {
         )}
       </div>
 
+      {activeFilterCount > 0 && (
+        <>
+          <div className="text-xs text-gray-500 mb-4">Active filters:</div>
+
+          <div className="flex flex-wrap gap-2 mb-4">
+            <AnimatePresence>
+              {filters.status.map((status) => (
+                <motion.div
+                  key={status}
+                  initial={{ scale: 0.8, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  exit={{ scale: 0.8, opacity: 0 }}
+                >
+                  <Badge 
+                    variant="modern" 
+                    size="sm"
+                    className="bg-purple-100 text-purple-800 hover:bg-purple-200 dark:bg-purple-900/30 dark:text-purple-400 dark:hover:bg-purple-900/50 border border-purple-200 dark:border-purple-800 flex items-center gap-1"
+                  >
+                    {status}
+                    <button
+                      className="hover:text-purple-900 dark:hover:text-white transition-colors"
+                      onClick={() => handleFilterClick("status", status)}
+                      aria-label={`Remove ${status} filter`}
+                    >
+                      <X size={12} />
+                    </button>
+                  </Badge>
+                </motion.div>
+              ))}
+              {filters.genre.map((genre) => (
+                <motion.div
+                  key={genre}
+                  initial={{ scale: 0.8, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  exit={{ scale: 0.8, opacity: 0 }}
+                >
+                  <Badge 
+                    variant="modern" 
+                    size="sm"
+                    className="bg-blue-100 text-blue-800 hover:bg-blue-200 dark:bg-blue-900/30 dark:text-blue-400 dark:hover:bg-blue-900/50 border border-blue-200 dark:border-blue-800 flex items-center gap-1"
+                  >
+                    {genre}
+                    <button
+                      className="hover:text-blue-900 dark:hover:text-white transition-colors"
+                      onClick={() => handleFilterClick("genre", genre)}
+                      aria-label={`Remove ${genre} filter`}
+                    >
+                      <X size={12} />
+                    </button>
+                  </Badge>
+                </motion.div>
+              ))}
+              {filters.animeStyle.map((style) => (
+                <motion.div
+                  key={style}
+                  initial={{ scale: 0.8, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  exit={{ scale: 0.8, opacity: 0 }}
+                >
+                  <Badge 
+                    variant="modern" 
+                    size="sm"
+                    className="bg-green-100 text-green-800 hover:bg-green-200 dark:bg-green-900/30 dark:text-green-400 dark:hover:bg-green-900/50 border border-green-200 dark:border-green-800 flex items-center gap-1"
+                  >
+                    {style}
+                    <button
+                      className="hover:text-green-900 dark:hover:text-white transition-colors"
+                      onClick={() => handleFilterClick("animeStyle", style)}
+                      aria-label={`Remove ${style} filter`}
+                    >
+                      <X size={12} />
+                    </button>
+                  </Badge>
+                </motion.div>
+              ))}
+            </AnimatePresence>
+          </div>
+        </>
+      )}
+
       <Collapsible open={openSections.status} className="mb-4">
         <CollapsibleTrigger asChild>
           <Button
@@ -83,7 +164,7 @@ export default function FilterBar({ filters, onFilterChange }: FilterBarProps) {
             className="flex w-full justify-between p-0 h-auto font-medium group"
             onClick={() => toggleSection("status")}
           >
-            <span className="bg-clip-text text-transparent bg-gradient-to-r from-white to-gray-400 group-hover:from-purple-400 group-hover:to-blue-400 transition-all">
+            <span className="text-white group-hover:text-purple-400 transition-all">
               Status
             </span>
             <ChevronDown className={`h-4 w-4 transition-transform ${openSections.status ? "rotate-180" : ""}`} />
@@ -118,7 +199,7 @@ export default function FilterBar({ filters, onFilterChange }: FilterBarProps) {
             className="flex w-full justify-between p-0 h-auto font-medium group"
             onClick={() => toggleSection("genre")}
           >
-            <span className="bg-clip-text text-transparent bg-gradient-to-r from-white to-gray-400 group-hover:from-purple-400 group-hover:to-blue-400 transition-all">
+            <span className="text-white group-hover:text-blue-400 transition-all">
               Genre
             </span>
             <ChevronDown className={`h-4 w-4 transition-transform ${openSections.genre ? "rotate-180" : ""}`} />
@@ -153,7 +234,7 @@ export default function FilterBar({ filters, onFilterChange }: FilterBarProps) {
             className="flex w-full justify-between p-0 h-auto font-medium group"
             onClick={() => toggleSection("animeStyle")}
           >
-            <span className="bg-clip-text text-transparent bg-gradient-to-r from-white to-gray-400 group-hover:from-purple-400 group-hover:to-blue-400 transition-all">
+            <span className="text-white group-hover:text-green-400 transition-all">
               Anime Style
             </span>
             <ChevronDown className={`h-4 w-4 transition-transform ${openSections.animeStyle ? "rotate-180" : ""}`} />
@@ -180,71 +261,6 @@ export default function FilterBar({ filters, onFilterChange }: FilterBarProps) {
           ))}
         </CollapsibleContent>
       </Collapsible>
-
-      {activeFilterCount > 0 && (
-        <>
-          <div className="text-xs text-gray-500 mt-6 mb-2">Active filters:</div>
-
-          <div className="flex flex-wrap gap-1">
-            <AnimatePresence>
-              {filters.status.map((status) => (
-                <motion.div
-                  key={status}
-                  initial={{ scale: 0.8, opacity: 0 }}
-                  animate={{ scale: 1, opacity: 1 }}
-                  exit={{ scale: 0.8, opacity: 0 }}
-                  className="bg-purple-500/20 text-purple-400 text-xs px-2 py-1 rounded-md flex items-center gap-1 border border-purple-500/20"
-                >
-                  {status}
-                  <button
-                    className="hover:text-white transition-colors"
-                    onClick={() => handleFilterClick("status", status)}
-                    aria-label={`Remove ${status} filter`}
-                  >
-                    <X size={12} />
-                  </button>
-                </motion.div>
-              ))}
-              {filters.genre.map((genre) => (
-                <motion.div
-                  key={genre}
-                  initial={{ scale: 0.8, opacity: 0 }}
-                  animate={{ scale: 1, opacity: 1 }}
-                  exit={{ scale: 0.8, opacity: 0 }}
-                  className="bg-blue-500/20 text-blue-400 text-xs px-2 py-1 rounded-md flex items-center gap-1 border border-blue-500/20"
-                >
-                  {genre}
-                  <button
-                    className="hover:text-white transition-colors"
-                    onClick={() => handleFilterClick("genre", genre)}
-                    aria-label={`Remove ${genre} filter`}
-                  >
-                    <X size={12} />
-                  </button>
-                </motion.div>
-              ))}
-              {filters.animeStyle.map((style) => (
-                <motion.div
-                  key={style}
-                  initial={{ scale: 0.8, opacity: 0 }}
-                  animate={{ scale: 1, opacity: 1 }}
-                  exit={{ scale: 0.8, opacity: 0 }}
-                  className="bg-green-500/20 text-green-400 text-xs px-2 py-1 rounded-md flex items-center gap-1 border border-green-500/20"
-                >
-                  {style}
-                  <button
-                    className="hover:text-white transition-colors"
-                    onClick={() => handleFilterClick("animeStyle", style)}
-                    aria-label={`Remove ${style} filter`}
-                  >
-                    <X size={12} />
-                  </button>
-                </motion.div>
-              ))}
-            </AnimatePresence>
-          </div>
-        </>
-      )}
     </div>
   )
 }

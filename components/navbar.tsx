@@ -3,7 +3,6 @@
 import type React from "react"
 
 import { useState, useEffect } from "react"
-import Link from "next/link"
 import { Menu, Search, X } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
@@ -13,16 +12,14 @@ interface NavbarProps {
   onSearch: (query: string) => void
   onCategoryChange: (category: string) => void
   activeCategory: string
+  onReset: () => void
 }
 
-export default function Navbar({ onSearch, onCategoryChange, activeCategory }: NavbarProps) {
+export default function Navbar({ onSearch, onCategoryChange, activeCategory, onReset }: NavbarProps) {
   const [searchQuery, setSearchQuery] = useState("")
   const [mobileSearchQuery, setMobileSearchQuery] = useState("")
   const [isOpen, setIsOpen] = useState(false)
   const [isScrolled, setIsScrolled] = useState(false)
-
-  // Categories for the filter buttons
-  const categories = ["All Games", "One Piece", "Naruto", "Dragon Ball", "My Hero Academia", "Demon Slayer"]
 
   // Handle search input change
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -45,11 +42,6 @@ export default function Navbar({ onSearch, onCategoryChange, activeCategory }: N
     e.preventDefault()
     onSearch(mobileSearchQuery)
     setIsOpen(false)
-  }
-
-  // Handle category button click
-  const handleCategoryClick = (category: string) => {
-    onCategoryChange(category)
   }
 
   // Clear search
@@ -98,6 +90,31 @@ export default function Navbar({ onSearch, onCategoryChange, activeCategory }: N
     return () => window.removeEventListener("scroll", handleScroll)
   }, [])
 
+  // Handle Discord link click
+  const handleDiscordClick = () => {
+    try {
+      console.log('Discord button clicked!')
+      const discordUrl = 'https://discord.gg/TeGGEvGrfq'
+      console.log('Opening Discord URL:', discordUrl)
+      
+      // Try window.open first
+      const newWindow = window.open(discordUrl, '_blank', 'noopener,noreferrer')
+      
+      // Fallback if popup is blocked
+      if (!newWindow || newWindow.closed || typeof newWindow.closed === 'undefined') {
+        console.log('Popup blocked, trying direct navigation...')
+        // Fallback to direct navigation
+        window.location.href = discordUrl
+      } else {
+        console.log('Discord opened successfully in new tab')
+      }
+    } catch (error) {
+      console.error('Error opening Discord:', error)
+      // Final fallback
+      window.location.href = 'https://discord.gg/TeGGEvGrfq'
+    }
+  }
+
   return (
     <header
       className={`sticky top-0 z-50 w-full border-b transition-all duration-300 ${
@@ -106,23 +123,17 @@ export default function Navbar({ onSearch, onCategoryChange, activeCategory }: N
           : "border-transparent bg-[#0f1117]/50 backdrop-blur-sm"
       }`}
     >
-      <div className="container mx-auto flex h-16 items-center justify-between px-4">
-        <div className="flex items-center gap-2 md:gap-6">
-          <Link href="/" className="flex items-center gap-2 group">
-            <div className="relative h-9 w-9 overflow-hidden rounded-full bg-gradient-to-br from-blue-500 to-purple-600 p-[2px] transition-all duration-300 group-hover:from-purple-600 group-hover:to-blue-500">
-              <div className="absolute inset-[2px] rounded-full bg-[#0f1117] flex items-center justify-center">
-                <span className="text-white font-bold text-xs">AR</span>
-              </div>
+      <div className="container mx-auto flex h-16 items-center justify-between px-0">
+        <div className="flex items-center gap-2 md:gap-6 -ml-[100px]">
+          <button onClick={onReset} className="flex items-center gap-2 group">
+            <div className="relative h-28 w-96 overflow-hidden transition-all duration-300 group-hover:scale-105">
+              <img 
+                src="https://i.ibb.co/9HJWzphC/20250529-1928-Ani-Blox-Calendar-Design-simple-compose-01jwedxz07e6kagdq941c2md50-1-removebg.png"
+                alt="AniBlox Calendar"
+                className="h-full w-full object-contain"
+              />
             </div>
-            <motion.span
-              initial={{ opacity: 0, x: -10 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.5 }}
-              className="hidden md:inline-block font-bold text-xl bg-clip-text text-transparent bg-gradient-to-r from-white via-white to-gray-400"
-            >
-              AnimeRoblox
-            </motion.span>
-          </Link>
+          </button>
         </div>
 
         <div className="flex items-center gap-4">
@@ -153,11 +164,19 @@ export default function Navbar({ onSearch, onCategoryChange, activeCategory }: N
             </div>
           </form>
 
-          <Link href="/admin" className="hidden md:block">
-            <Button variant="outline" size="sm" className="border-purple-500/30 text-purple-400 hover:bg-purple-500/10 hover:text-purple-300">
-              Admin
-            </Button>
-          </Link>
+          {/* Discord Button */}
+          <Button
+            size="sm"
+            variant="ghost"
+            onClick={handleDiscordClick}
+            className="h-10 px-4 rounded-lg backdrop-blur-sm transition-all duration-200 hover:scale-105 border bg-indigo-500/20 border-indigo-400/30 text-indigo-400 hover:bg-indigo-500/30 hover:text-indigo-300 flex items-center gap-2"
+            title="Join our Discord community"
+          >
+            <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+              <path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057 19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028 14.09 14.09 0 0 0 1.226-1.994.076.076 0 0 0-.041-.106 13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128 10.2 10.2 0 0 0 .372-.292.074.074 0 0 1 .077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.892.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.03zM8.02 15.33c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.956-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.956 2.418-2.157 2.418zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.955-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.946 2.418-2.157 2.418z"/>
+            </svg>
+            <span className="hidden md:inline">Discord</span>
+          </Button>
 
           <Sheet open={isOpen} onOpenChange={setIsOpen}>
             <SheetTrigger asChild>
@@ -190,59 +209,9 @@ export default function Navbar({ onSearch, onCategoryChange, activeCategory }: N
                     <Search size={18} />
                   </button>
                 </form>
-                <div className="mt-4">
-                  <h3 className="font-medium mb-2 text-gray-300">Categories</h3>
-                  <div className="flex flex-col gap-1">
-                    {categories.map((category) => (
-                      <Button
-                        key={category}
-                        variant="ghost"
-                        className={`justify-start ${
-                          activeCategory === category
-                            ? "text-white bg-gradient-to-r from-purple-500/20 to-blue-500/20 border-l-2 border-purple-500"
-                            : "text-gray-400"
-                        }`}
-                        onClick={() => {
-                          handleCategoryClick(category)
-                          setIsOpen(false)
-                        }}
-                      >
-                        {category}
-                      </Button>
-                    ))}
-                  </div>
-                </div>
-
-                <div className="mt-6 pt-4 border-t border-gray-800">
-                  <Link href="/admin" onClick={() => setIsOpen(false)}>
-                    <Button variant="outline" className="w-full border-purple-500/30 text-purple-400 hover:bg-purple-500/10 hover:text-purple-300">
-                      Admin Dashboard
-                    </Button>
-                  </Link>
-                </div>
               </div>
             </SheetContent>
           </Sheet>
-        </div>
-      </div>
-
-      <div className="container mx-auto px-4 overflow-x-auto scrollbar-hide">
-        <div className="flex items-center gap-1 py-2">
-          {categories.map((category) => (
-            <Button
-              key={category}
-              variant="ghost"
-              size="sm"
-              className={`whitespace-nowrap transition-all duration-300 ${
-                activeCategory === category
-                  ? "text-white bg-gradient-to-r from-purple-500/20 to-blue-500/20 border-b-2 border-purple-500"
-                  : "text-gray-400 hover:text-white"
-              }`}
-              onClick={() => handleCategoryClick(category)}
-            >
-              {category}
-            </Button>
-          ))}
         </div>
       </div>
     </header>

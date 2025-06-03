@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="32" height="32">
+  <!-- Background circle -->
+  <circle cx="50" cy="50" r="48" fill="#f3f4f6" stroke="none"/>
+  
+  <!-- Calendar body -->
+  <rect x="20" y="30" width="60" height="50" rx="8" ry="8" fill="#000" stroke="none"/>
+  
+  <!-- Calendar header -->
+  <rect x="20" y="30" width="60" height="15" rx="8" ry="8" fill="#000" stroke="none"/>
+  
+  <!-- Calendar holes/rings -->
+  <circle cx="35" cy="22" r="4" fill="#000"/>
+  <circle cx="65" cy="22" r="4" fill="#000"/>
+  
+  <!-- Calendar content area -->
+  <rect x="25" y="40" width="50" height="35" rx="3" ry="3" fill="#fff" stroke="none"/>
+  
+  <!-- Clock hand pointing to 4 o'clock position -->
+  <g transform="translate(50, 57.5)">
+    <!-- Clock center dot -->
+    <circle cx="0" cy="0" r="2" fill="#000"/>
+    <!-- Clock hand -->
+    <line x1="0" y1="0" x2="12" y2="8" stroke="#000" stroke-width="3" stroke-linecap="round"/>
+  </g>
+</svg> 

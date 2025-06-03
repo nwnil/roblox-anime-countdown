@@ -83,11 +83,37 @@ const config: Config = {
   				to: {
   					height: '0'
   				}
-  			}
+  			},
+        'dropdown-in': {
+          '0%': { 
+            opacity: '0', 
+            transform: 'scale(0.95) translateY(-10px)' 
+          },
+          '60%': { 
+            opacity: '1', 
+            transform: 'scale(1.02) translateY(0px)' 
+          },
+          '100%': { 
+            opacity: '1', 
+            transform: 'scale(1) translateY(0px)' 
+          }
+        },
+        'dropdown-out': {
+          '0%': { 
+            opacity: '1', 
+            transform: 'scale(1) translateY(0px)' 
+          },
+          '100%': { 
+            opacity: '0', 
+            transform: 'scale(0.95) translateY(-10px)' 
+          }
+        }
   		},
   		animation: {
   			'accordion-down': 'accordion-down 0.2s ease-out',
-  			'accordion-up': 'accordion-up 0.2s ease-out'
+  			'accordion-up': 'accordion-up 0.2s ease-out',
+        'dropdown-in': 'dropdown-in 0.3s cubic-bezier(0.16, 1, 0.3, 1)',
+        'dropdown-out': 'dropdown-out 0.2s ease-out'
   		}
   	}
   },
