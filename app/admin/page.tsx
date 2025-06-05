@@ -826,7 +826,8 @@ export default function AdminPage() {
                           <h3 className="text-xl font-bold text-white">Media Overview</h3>
                           <p className="text-green-200/80">Summary of all uploaded content</p>
                         </div>
-                      </div>
+            git reset --hard 4d11999
+          </div>
                       
                       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                         <div className="bg-green-900/30 border border-green-700/50 rounded-xl p-4 text-center">
